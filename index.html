@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeuSistema.tech - Enterprise ERP</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js para Gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Bibliotecas para Geração de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <!-- Link para o arquivo CSS externo -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Tela de Login Bloqueadora -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card">
+            <div class="login-brand">
+                <i class="fa-solid fa-cube text-gradient"></i>
+                <h2>SeuSistema.tech</h2>
+            </div>
+            <form id="form-login">
+                <div class="form-group">
+                    <label for="login-user">Usuário Administrador</label>
+                    <input type="text" id="login-user" required placeholder="Digite o usuário">
+                </div>
+                <div class="form-group margin-top">
+                    <label for="login-pass">Senha de Acesso</label>
+                    <input type="password" id="login-pass" required placeholder="Digite sua senha">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full margin-top">Acessar Painel</button>
+                <p id="login-error" class="login-error-msg"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Container Geral -->
+    <div class="app-container" id="appContainer" style="display: none;">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-cube text-gradient"></i>
+                <span>Seu Sistema</span>
+            </div>
+            <nav class="sidebar-menu">
+                <button class="menu-item active" data-tab="painel-central">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Painel Central</span>
+                </button>
+                <button class="menu-item" data-tab="solicitacoes-externas">
+                    <i class="fa-solid fa-globe"></i>
+                    <span>Solicitações Ext.</span>
+                    <span class="badge-alert" id="badge-solicitacoes" style="display: none;">0</span>
+                </button>
+                <button class="menu-item" data-tab="clientes">
+                    <i class="fa-solid fa-user-group"></i>
+                    <span>Clientes</span>
+                </button>
+                <button class="menu-item" data-tab="orcamentos">
+                    <i class="fa-solid fa-file-contract"></i>
+                    <span>Criar Orçamento</span>
+                </button>
+                <button class="menu-item" data-tab="linha-producao">
+                    <i class="fa-solid fa-network-wired"></i>
+                    <span>Linha de Produção</span>
+                </button>
+                <button class="menu-item" data-tab="fluxo-caixa">
+                    <i class="fa-solid fa-wallet"></i>
+                    <span>Fluxo de Caixa</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <span>Versão Pro 4.0</span>
+                <button class="btn btn-sm btn-danger btn-full margin-top" id="btnLogout">
+                    <i class="fa-solid fa-right-from-bracket"></i> Sair do Painel
+                </button>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Área Principal -->
+        <main class="main-content">
+            
+            <header class="top-header">
+                <button class="toggle-btn" id="toggleBtn">
+                    <i class="fa-solid fa-bars-staggered"></i>
+                </button>
+                <div class="header-title">
+                    <h1 id="page-title">Painel Central</h1>
+                </div>
+                <div class="user-profile">
+                    <div class="user-avatar">ADM</div>
+                    <span>Administrador</span>
+                </div>
+            </header>
+
+            <div class="content-body">
+
+                <!-- ABA 1: PAINEL CENTRAL -->
+                <section id="painel-central" class="tab-content active">
+                    <div class="dashboard-cards-grid">
+                        <div class="card card-blue">
+                            <div class="card-info">
+                                <span class="card-title">Demandas em Aberto</span>
+                                <h2 class="card-value" id="count-demandas-aberto">0</h2>
+                            </div>
+                            <div class="card-icon"><i class="fa-solid fa-folder-open"></i></div>
+                        </div>
+                        <div class="card card-purple">
+                            <div class="card-info">
+                                <span class="card-title">Novas Demandas</span>
+                                <h2 class="card-value" id="count-demandas-novas">0</h2>
+                            </div>
+                            <div class="card-icon"><i class="fa-solid fa-circle-plus"></i></div>
+                        </div>
+                        <div class="card card-green">
+                            <div class="card-info">
+                                <span class="card-title">Serviços Aprovados</span>
+                                <h2 class="card-value" id="count-servicos-aprovados">0</h2>
+                            </div>
+                            <div class="card-icon"><i class="fa-solid fa-square-check"></i></div>
+                        </div>
+                        <div class="card card-blue">
+                            <div class="card-info">
+                                <span class="card-title">Em Desenvolvimento</span>
+                                <h2 class="card-value" id="count-servicos-desenvolvimento">0</h2>
+                            </div>
+                            <div class="card-icon"><i class="fa-solid fa-code"></i></div>
+                        </div>
+                        <div class="card card-purple">
+                            <div class="card-info">
+                                <span class="card-title">Testes / Homologação</span>
+                                <h2 class="card-value" id="count-servicos-testes">0</h2>
+                            </div>
+                            <div class="card-icon"><i class="fa-solid fa-vial-circle-check"></i></div>
+                        </div>
+                        <div class="card card-green">
+                            <div class="card-info">
+                                <span class="card-title">Concluído / Entregue</span>
+                                <h2 class="card-value" id="count-servicos-concluidos">0</h2>
+                            </div>
+                            <div class="card-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid margin-top">
+                        <div class="grid-card chart-card">
+                            <h3>Balanço de Fluxo</h3>
+                            <div class="chart-container">
+                                <canvas id="financeChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="grid-card chart-card">
+                            <h3>Distribuição de Caixa</h3>
+                            <div class="chart-container">
+                                <canvas id="distributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ABA DE SOLICITAÇÕES EXTERNAS (SEM GERENCIADOR DE PORTFÓLIO - LIMPO) -->
+                <section id="solicitacoes-externas" class="tab-content">
+                    <div class="dashboard-grid">
+                        
+                        <div class="requests-column">
+                            <!-- Solicitações Recebidas Pendentes -->
+                            <div class="section-card">
+                                <h3><i class="fa-solid fa-satellite-dish text-gradient"></i> Solicitações Recebidas do Site</h3>
+                                <div class="requests-list" id="lista-solicitacoes"></div>
+                            </div>
+                            
+                            <!-- Histórico de Solicitações -->
+                            <div class="section-card margin-top">
+                                <div class="card-header-actions" style="margin-bottom: 20px;">
+                                    <h3 style="margin-bottom: 0px;"><i class="fa-solid fa-clock-rotate-left text-gradient"></i> Histórico de Solicitações</h3>
+                                    <button class="btn btn-sm btn-danger" id="btn-limpar-historico-solicitacoes">
+                                        <i class="fa-solid fa-trash-can"></i> Limpar
+                                    </button>
+                                </div>
+                                <div class="requests-list" id="lista-historico-solicitacoes"></div>
+                            </div>
+                        </div>
+
+                        <!-- Simulador de Envio de Cliente -->
+                        <div class="section-card">
+                            <h3><i class="fa-solid fa-vial"></i> Simulador de Envio de Cliente</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;">
+                                Simule o envio de formulários externos de seu futuro site.
+                            </p>
+                            <form id="form-simulador-cliente" class="form-grid">
+                                <div class="form-group">
+                                    <label>Nome do Cliente</label>
+                                    <input type="text" id="sim-nome" required placeholder="Ex: Roberto Carlos">
+                                </div>
+                                <div class="form-group">
+                                    <label>E-mail</label>
+                                    <input type="email" id="sim-email" required placeholder="roberto@email.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Telefone</label>
+                                    <input type="text" id="sim-tel" required placeholder="(11) 98765-4321">
+                                </div>
+                                <div class="form-group">
+                                    <label>Descrição do Serviço Necessário</label>
+                                    <input type="text" id="sim-servico" required placeholder="Preciso de um App Delivery">
+                                </div>
+                                <div class="form-group col-span-2">
+                                    <button type="submit" class="btn btn-secondary btn-full">Disparar Solicitação Externa</button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- ABA 2: CLIENTES -->
+                <section id="clientes" class="tab-content">
+                    <div class="section-card">
+                        <h3 id="form-cliente-title">Cadastrar Novo Cliente</h3>
+                        <form id="form-cliente">
+                            <input type="hidden" id="edit-client-id">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="client-name">Nome / Razão Social (Obrigatório)</label>
+                                    <input type="text" id="client-name" required placeholder="Razão social ou Nome completo">
+                                </div>
+                                <div class="form-group">
+                                    <label for="client-document">CPF / CNPJ</label>
+                                    <input type="text" id="client-document" placeholder="00.000.000/0000-00">
+                                </div>
+                                <div class="form-group">
+                                    <label for="client-email">E-mail</label>
+                                    <input type="email" id="client-email" placeholder="contato@empresa.com">
+                                </div>
+                                <div class="form-group">
+                                    <label for="client-phone">Telefone / WhatsApp (Obrigatório)</label>
+                                    <input type="text" id="client-phone" required placeholder="(00) 00000-0000">
+                                </div>
+                                <div class="form-group">
+                                    <label for="client-cep">CEP</label>
+                                    <input type="text" id="client-cep" placeholder="00000-000">
+                                </div>
+                                <div class="form-group">
+                                    <label for="client-address">Endereço Completo</label>
+                                    <input type="text" id="client-address" placeholder="Av. Paulista, 1000 - Sala 12">
+                                </div>
+                                <div class="form-group">
+                                    <label for="client-city">Cidade</label>
+                                    <input type="text" id="client-city" placeholder="São Paulo">
+                                </div>
+                                <div class="form-group">
+                                    <label for="client-uf">UF</label>
+                                    <input type="text" id="client-uf" placeholder="SP" maxlength="2">
+                                </div>
+                            </div>
+                            <div class="form-group margin-top flex-align-end" style="flex-direction: row; gap: 10px;">
+                                <button type="button" id="btn-cancel-edit" class="btn btn-secondary" style="display: none;">Cancelar</button>
+                                <button type="submit" id="btn-submit-cliente" class="btn btn-primary">Salvar Cliente</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="section-card margin-top">
+                        <h3>Lista de Clientes Sincronizados</h3>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Documento</th>
+                                        <th>Contato</th>
+                                        <th>Cidade/UF</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-clientes"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ABA 3: CRIAR ORÇAMENTO -->
+                <section id="orcamentos" class="tab-content">
+                    <div class="section-card">
+                        <h3>Estruturar Orçamento de Escopo</h3>
+                        <form id="form-orcamento">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="orc-cliente">Selecione o Cliente</label>
+                                    <select id="orc-cliente" required></select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="orc-validade">Prazo de Validade</label>
+                                    <input type="date" id="orc-validade" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="orc-pagamento">Método de Pagamento Sugerido</label>
+                                    <select id="orc-pagamento" required>
+                                        <option value="À vista via PIX">À vista via PIX</option>
+                                        <option value="Dinheiro físico">Dinheiro físico</option>
+                                        <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                        <option value="Cartão de Débito">Cartão de Débito</option>
+                                        <option value="Via Link de Pagamento">Via Link de Pagamento</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="items-section margin-top">
+                                <h4>Itens & Especificações Técnicas</h4>
+                                <div id="orc-itens-container"></div>
+                                <button type="button" class="btn btn-sm btn-secondary margin-top" onclick="adicionarLinhaItem()">
+                                    <i class="fa-solid fa-plus"></i> Adicionar Item
+                                </button>
+                            </div>
+
+                            <div class="budget-total-bar margin-top">
+                                <span>Valor Estimado do Projeto:</span>
+                                <h3 id="orc-total-calc">R$ 0,00</h3>
+                            </div>
+
+                            <div class="form-group margin-top">
+                                <button type="submit" class="btn btn-primary">Salvar Orçamento no Sistema</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="section-card margin-top">
+                        <h3>Histórico de Propostas Comerciais</h3>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Cliente</th>
+                                        <th>Valor Global</th>
+                                        <th>Validade</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-orcamentos"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ABA 4: LINHA DE PRODUÇÃO -->
+                <section id="linha-producao" class="tab-content">
+                    <div class="production-line-title">
+                        <h3><i class="fa-solid fa-network-wired text-gradient"></i> Linha de Produção (Esteira de Entregas)</h3>
+                        <button class="btn btn-sm btn-primary" onclick="openDemandaModal()">+ Nova Demanda Manual</button>
+                    </div>
+
+                    <div class="kanban-board">
+                        <div class="kanban-column" id="col-aguardando">
+                            <div class="column-header header-gray">Aguardando (Backlog)</div>
+                            <div class="kanban-cards" id="cards-aguardando"></div>
+                        </div>
+                        <div class="kanban-column" id="col-desenvolvimento">
+                            <div class="column-header header-blue">Em Desenvolvimento</div>
+                            <div class="kanban-cards" id="cards-desenvolvimento"></div>
+                        </div>
+                        <div class="kanban-column" id="col-testes">
+                            <div class="column-header header-purple">Testes / Homologação</div>
+                            <div class="kanban-cards" id="cards-testes"></div>
+                        </div>
+                        <div class="kanban-column" id="col-concluido">
+                            <div class="column-header header-green">Concluído / Entregue</div>
+                            <div class="kanban-cards" id="cards-concluido"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ABA 5: FLUXO DE CAIXA -->
+                <section id="fluxo-caixa" class="tab-content">
+                    <div class="financial-summary">
+                        <div class="fin-card text-green">
+                            <span>Entradas Consolidadas</span>
+                            <h3 id="fluxo-receitas">R$ 0,00</h3>
+                        </div>
+                        <div class="fin-card text-red">
+                            <span>Saídas Registradas</span>
+                            <h3 id="fluxo-despesas">R$ 0,00</h3>
+                        </div>
+                        <div class="fin-card text-blue">
+                            <span>Faturamento Líquido</span>
+                            <h3 id="fluxo-saldo">R$ 0,00</h3>
+                        </div>
+                    </div>
+
+                    <div class="section-card margin-top">
+                        <h3>Registrar Movimentação</h3>
+                        <form id="form-transacao" class="form-grid">
+                            <div class="form-group">
+                                <label for="trans-desc">Histórico / Descrição</label>
+                                <input type="text" id="trans-desc" required placeholder="Ex: Recebimento de Hospedagem Anual">
+                            </div>
+                            <div class="form-group">
+                                <label for="trans-tipo">Natureza da Operação</label>
+                                <select id="trans-tipo" required>
+                                    <option value="receita">Receita (Entrada)</option>
+                                    <option value="despesa">Despesa (Saída)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="trans-valor">Valor Operacional (R$)</label>
+                                <input type="number" step="0.01" id="trans-valor" required placeholder="0.00">
+                            </div>
+                            <div class="form-group">
+                                <label for="trans-data">Data de Competência</label>
+                                <input type="date" id="trans-data" required>
+                            </div>
+                            <div class="form-group col-span-2 flex-align-end">
+                                <button type="submit" class="btn btn-primary">Lançar Movimentação</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="section-card margin-top">
+                        <h3>Extrato de Lançamentos</h3>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Descrição</th>
+                                        <th>Tipo</th>
+                                        <th>Valor</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-transacoes"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Cadastro de Demandas -->
+    <div class="modal" id="demandaModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeDemandaModal()">&times;</span>
+            <h3>Nova Tarefa de Produção</h3>
+            <form id="form-demanda">
+                <div class="form-group">
+                    <label for="dem-titulo">Título do Trabalho</label>
+                    <input type="text" id="dem-titulo" required placeholder="Ex: Ajustar gateway de pagamento">
+                </div>
+                <div class="form-group">
+                    <label for="dem-cliente-ref">Cliente Relacionado</label>
+                    <select id="dem-cliente-ref">
+                        <option value="Nenhum">Nenhum</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary margin-top btn-full">Iniciar na Produção</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal CRM (Histórico e Notas) -->
+    <div class="modal" id="crmModal">
+        <div class="modal-content" style="max-width: 600px; max-height: 85vh; overflow-y: auto;">
+            <span class="close-modal" onclick="closeCrmModal()">&times;</span>
+            <h3>Histórico de Relacionamento (CRM)</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;" id="crm-cliente-identificacao"></p>
+            
+            <form id="form-crm-nota" class="margin-top">
+                <div class="form-group">
+                    <label for="crm-nota-texto">Nova Anotação de Atendimento</label>
+                    <textarea id="crm-nota-texto" rows="3" required placeholder="Ex: Cliente solicitou alteração técnica..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm margin-top">Registrar no Histórico</button>
+            </form>
+
+            <div class="crm-timeline-section margin-top">
+                <h4>Linha do Tempo de Atendimentos</h4>
+                <div class="crm-timeline" id="crm-timeline-lista"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalhe de Solicitação Histórica -->
+    <div class="modal" id="requestDetailModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-modal" onclick="closeRequestDetailModal()">&times;</span>
+            <h3>Detalhes da Solicitação do Site</h3>
+            <div class="request-detail-body margin-top" id="request-detail-content"></div>
+        </div>
+    </div>
+
+    <!-- Pop-up de Alerta Central do Site -->
+    <div class="alert-popup" id="alertPopup">
+        <div class="alert-popup-icon"><i class="fa-solid fa-bell-ring fa-bounce"></i></div>
+        <h4>Nova Solicitação Comercial!</h4>
+        <p id="alertPopupMessage"></p>
+        <button class="btn btn-primary margin-top btn-full" id="btnAlertPopupAction">Visualizar Solicitação</button>
+    </div>
+
+    <!-- COMPONENTE: Diálogo de Alerta & Confirmação Centralizado Néon -->
+    <div class="custom-dialog-overlay" id="customDialogOverlay">
+        <div class="custom-dialog-card">
+            <div class="custom-dialog-icon" id="customDialogIcon"></div>
+            <h3 id="customDialogTitle">Confirmação</h3>
+            <p id="customDialogMessage"></p>
+            <div class="custom-dialog-actions">
+                <button class="btn btn-secondary btn-sm" id="btnCustomDialogCancel">Cancelar</button>
+                <button class="btn btn-primary btn-sm" id="btnCustomDialogConfirm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script síncrono para controle imediato de Login e Sessão -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginOverlay = document.getElementById('loginOverlay');
+            const appContainer = document.getElementById('appContainer');
+            const formLogin = document.getElementById('form-login');
+            const btnLogout = document.getElementById('btnLogout');
+            const errorMsg = document.getElementById('login-error');
+
+            const isLogged = sessionStorage.getItem('seusistema_logged_in') === 'true';
+
+            if (isLogged) {
+                loginOverlay.style.display = 'none';
+                appContainer.style.display = 'flex';
+            } else {
+                loginOverlay.style.display = 'flex';
+                appContainer.style.display = 'none';
+            }
+
+            formLogin.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const userVal = document.getElementById('login-user').value.trim();
+                const passVal = document.getElementById('login-pass').value.trim();
+
+                if (userVal === 'handersondev' && passVal === '97213065') {
+                    sessionStorage.setItem('seusistema_logged_in', 'true');
+                    loginOverlay.style.display = 'none';
+                    appContainer.style.display = 'flex';
+                    window.dispatchEvent(new Event('seusistema_authorized'));
+                } else {
+                    errorMsg.innerText = "Acesso negado. Credenciais incorretas.";
+                    errorMsg.style.display = 'block';
+                }
+            });
+
+            btnLogout.addEventListener('click', () => {
+                sessionStorage.removeItem('seusistema_logged_in');
+                location.reload();
+            });
+        });
+    </script>
+
+    <!-- Script Javascript externo configurado como módulo -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>--- START OF FILE script.js ---
